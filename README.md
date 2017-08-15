@@ -10,7 +10,7 @@ npm install -g wos
 
 ```bash
 $ wos --help
-  _       _____    __    __       ____  ______   _____ __  __________________
+ _       _____    __    __       ____  ______   _____ __  __________________
 | |     / /   |  / /   / /      / __ \/ ____/  / ___// / / / ____/ ____/ __ \
 | | /| / / /| | / /   / /      / / / / /_      \__ \/ /_/ / __/ / __/ / /_/ /
 | |/ |/ / ___ |/ /___/ /___   / /_/ / __/     ___/ / __  / /___/ /___/ ____/
@@ -19,13 +19,17 @@ $ wos --help
   Usage
     $ wos <options>
 
+  Important
+    Use single quotes in order to escape special characters.
+
   Options
     -i, --interface Capture interface
     -s, --ssid Wifi SSID
     -p, --pass Wifi password
+    -nm, --no-monitor Disable monitor mode
 
   Examples
-    $ wos -i en0 --ssid="HomeWifi" --pass="d4Pazsw0rD"
+    $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
 ```
 
 # License
