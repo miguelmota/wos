@@ -154,7 +154,7 @@ function processLine (layers) {
     })
 
     if (account || password) {
-      const row = [account, password, port, host, dstip, srcip, srcmac]
+      const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'']
 
       tableData.unshift(row)
 
