@@ -2,7 +2,7 @@
 
 > Monitor traffic for sheep and displays [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) dashboard.
 
-```
+```bash
 npm install -g wos
 ```
 
