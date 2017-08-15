@@ -67,7 +67,7 @@ table = contrib.table({
     fg: 'green'
   },
   columnSpacing: 5,
-  columnWidth: [20, 20, 20, 20, 20, 20, 20]
+  columnWidth: [20, 20, 20, 20, 20, 20, 20, 20]
 })
 
 table.focus()
