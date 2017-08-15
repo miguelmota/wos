@@ -5,6 +5,7 @@ const blessed = require('blessed')
 const contrib = require('blessed-contrib')
 const {exec}= require('shelljs')
 const meow = require('meow')
+const path = require(`path`);
 
 const cli = meow(`
     Usage
@@ -79,7 +80,8 @@ table.setData({
 screen.append(table)
 screen.render()
 
-  const child = exec(`source ./tshark.sh ${interface} ${ssid} ${pass}`, {async: true, silent: true})
+const tshark = path.resolve(__dirname, './tshark.sh')
+const child = exec(`source ${tshark} ${interface} ${ssid} ${pass}`, {async: true, silent: true})
 
   //process.stdin.pipe(JSONStream.parse('*._source.layers'))
   child.stdout.pipe(JSONStream.parse('*._source.layers'))
