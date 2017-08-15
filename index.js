@@ -32,7 +32,7 @@ const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
 
 let screen = null
 let table = null
-const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'ip', 'mac']
+const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'mac']
 const tableData = []
 
 const userFields = [
@@ -54,17 +54,17 @@ function main() {
 screen = blessed.screen()
 
 table = contrib.table({
-  keys: true,
+  keys: false,
   fg: 'white',
   selectedFg: 'white',
-  selectedBg: 'blue',
-  interactive: true,
+  selectedBg: 'green',
+  interactive: false,
   label: 'Wall of Sheep',
   width: '100%',
   height: '100%',
   border: {
     type: 'line',
-    fg: 'cyan'
+    fg: 'green'
   },
   columnSpacing: 5,
   columnWidth: [20, 20, 20, 20, 20, 20, 20]
@@ -190,3 +190,11 @@ function processLine (layers) {
               })
           }
           */
+// quit with command c
+process.stdin.setRawMode(true);
+process.stdin.on('data', function(b) {
+  if (b[0] === 3) {
+    process.stdin.setRawMode(false)
+    process.exit()
+  }
+})
