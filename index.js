@@ -32,7 +32,7 @@ const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
 
 let screen = null
 let table = null
-const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'mac']
+const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'mac', 'data']
 const tableData = []
 
 const userFields = [
@@ -153,8 +153,8 @@ function processLine (layers) {
       }
     })
 
-    if (account || password) {
-      const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'']
+    if (account || password || httpData) {
+      const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
 
       tableData.unshift(row)
 
