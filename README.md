@@ -2,6 +2,8 @@
 
 > Monitor traffic for sheep and display a [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) dashboard.
 
+# Install
+
 ```bash
 npm install -g wos
 ```
