@@ -18,7 +18,7 @@ const cli = meow(`
       -i, --interface Capture interface
       -s, --ssid Wifi SSID
       -p, --pass Wifi password
-      -nm, --no-monitor Disable monitor mode
+      --no-monitor Disable monitor mode
 
     Examples
       $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
@@ -29,6 +29,7 @@ const {flags} = cli
 const ssid = process.env.WOS_SSID || flags.ssid || flags.s
 const pass = process.env.WOS_PASS || flags.pass || flags.p
 const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
+const disableMonitor = process.env.WOS_NO_MONITOR || flags.noMonitor || (flags.monitor != null ? true : false)
 
 let screen = null
 let table = null
@@ -46,6 +47,7 @@ const passFields = [
 if (interface) {
   main()
 } else {
+  cli.showHelp()
   return false
 }
 
@@ -67,7 +69,7 @@ table = contrib.table({
     fg: 'green'
   },
   columnSpacing: 5,
-  columnWidth: [20, 20, 20, 20, 20, 20, 20, 20]
+  columnWidth: [20, 20, 5, 25, 13, 13, 17, 65]
 })
 
 table.focus()
@@ -81,7 +83,7 @@ screen.append(table)
 screen.render()
 
 const tshark = path.resolve(__dirname, './tshark.sh')
-const child = exec(`source ${tshark} ${interface} ${ssid} ${pass}`, {async: true, silent: true})
+const child = exec(`source ${tshark} ${interface} ${ssid} ${pass} ${disableMonitor ? 1 : 0}`, {async: true, silent: true})
 
   //process.stdin.pipe(JSONStream.parse('*._source.layers'))
   child.stdout.pipe(JSONStream.parse('*._source.layers'))
@@ -142,9 +144,15 @@ function processLine (layers) {
   let password = ''
 
   if (method === 'POST') {
-    const query = qs.parse(httpData)
+    let obj = null
 
-    var keys = Object.keys(query)
+    try {
+      obj = JSON.parse(httpData)
+    } catch(error) {
+      obj = qs.parse(httpData)
+    }
+
+    var keys = Object.keys(obj)
     keys.forEach(key => {
       if (userFields.indexOf(key) > -1) {
         account = query[key]

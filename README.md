@@ -26,10 +26,26 @@ $ wos --help
     -i, --interface Capture interface
     -s, --ssid Wifi SSID
     -p, --pass Wifi password
-    -nm, --no-monitor Disable monitor mode
+    --no-monitor Disable monitor mode
 
   Examples
     $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
+```
+
+# Requirements
+
+- [tshark - Dump and analyze network traffic](https://www.wireshark.org/docs/man-pages/tshark.html)
+
+- Wireless interface card that supports monitor mode
+
+# FAQ
+
+Q. My wireless card is stuck in monitor mode!
+
+A. Kill `tshark` processes and toggle off and on the wireless card.
+
+```bash
+pkill tshark
 ```
 
 # License
