@@ -1,11 +1,13 @@
+const fs = require('fs')
 const qs = require('qs')
-const getProp = require('get-prop')
+const path = require('path');
 const JSONStream = require('JSONStream')
-const blessed = require('blessed')
-const contrib = require('blessed-contrib')
 const {exec}= require('shelljs')
 const meow = require('meow')
-const path = require(`path`);
+
+const formatPacket = require(`./src/formatPacket`)
+const Gui = require(`./src/Gui`)
+const {userFields, passFields} = require(`./src/fields`)
 
 const cli = meow(`
     Usage
@@ -18,10 +20,12 @@ const cli = meow(`
       -i, --interface Capture interface
       -s, --ssid Wifi SSID
       -p, --pass Wifi password
-      --no-monitor Disable monitor mode
+      -n, --no-monitor Disable monitor mode
+      -f, --format Format: dash (default), text
+      -o, --outfile Output file
 
     Examples
-      $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
+      $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o sheep.txt
 `)
 
 const {flags} = cli
@@ -29,116 +33,76 @@ const {flags} = cli
 const ssid = process.env.WOS_SSID || flags.ssid || flags.s
 const pass = process.env.WOS_PASS || flags.pass || flags.p
 const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
-const disableMonitor = process.env.WOS_NO_MONITOR || flags.noMonitor || (flags.monitor != null ? true : false)
+const disableMonitor = process.env.WOS_NO_MONITOR || flags.n || flags.noMonitor || (flags.monitor != null ? true : false)
+const outfile = process.env.WOS_OUTPUT || flags.o || flags.outfile
+let format = process.env.WOS_FORMAT || flags.f || flags.format
 
-let screen = null
-let table = null
-const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'mac', 'data']
-const tableData = []
+if (!(format === 'dash' || format === 'text')) {
+  format = 'dash'
+}
 
-const userFields = [
-  'log', 'login', 'wpname', 'name', 'ahd_username', 'unickname', 'nickname', 'user', 'user_name', 'alias', 'pseudo', 'email', 'username', '_username', 'userid', 'form_loginname', 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login', 'uid', 'id', 'user_id', 'screename', 'uname', 'ulogin', 'acct', 'acctname', 'account', 'member', 'mailaddress', 'membername', 'login_username', 'login_email', 'loginusername', 'loginemail', 'uin', 'sign-in', 'sign_in', 'identification', 'os_username', 'txtAccount', 'loginAccount', 'username', 'user_email', 'useremail', 'account_id', 'customer', 'customer_id', 'identifier', 'session[username_or_email]', 'user[email]', 'signin-form[login]', '_username', 'identity', 'sUsername', 'login[username]', 'onlineId', 'onlineId1', 'online_id', 'userId', 'j_username', 'userid', 'AccessIDVisible', 'accessId', 'accessid', 'access_id'
-]
-
-const passFields = [
-  'os_password', 'txtPwd', 'loginPasswd', 'ahd_password', 'pass', 'password', '_password', 'passwd', 'passwrd', 'session_password', 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword', 'pwd', 'upassword', 'login_password', 'passwort', 'wppassword', 'upasswd', 'password', 'user_pass', 'secret', 'session[password]', 'user[password]', 'signin-form[password]', '_password', 'sPassword', 'login[password]', 'passcode', 'passcode1', 'j_password'
-]
-
-if (interface) {
-  main()
-} else {
+if (!interface) {
   cli.showHelp()
   return false
 }
 
+const monitor = disableMonitor ? '' : '-I'
+let decKeys = ''
 
-function main() {
-screen = blessed.screen()
-
-table = contrib.table({
-  keys: false,
-  fg: 'white',
-  selectedFg: 'white',
-  selectedBg: 'green',
-  interactive: false,
-  label: 'Wall of Sheep',
-  width: '100%',
-  height: '100%',
-  border: {
-    type: 'line',
-    fg: 'green'
-  },
-  columnSpacing: 5,
-  columnWidth: [20, 20, 5, 25, 13, 13, 17, 65]
-})
-
-table.focus()
-
-table.setData({
-  headers: tableHeaders,
-  data: tableData
-})
-
-screen.append(table)
-screen.render()
-
-const tshark = path.resolve(__dirname, './tshark.sh')
-const child = exec(`source ${tshark} ${interface} ${ssid} ${pass} ${disableMonitor ? 1 : 0}`, {async: true, silent: true})
-
-  //process.stdin.pipe(JSONStream.parse('*._source.layers'))
-  child.stdout.pipe(JSONStream.parse('*._source.layers'))
-  .on('data', processLine)
-
+if (pass) {
+  decKeys = `-o \"uat:80211_keys:\\\"wpa-pwd\\\",\\\"${pass}:${ssid}\\\"\"`
 }
 
+const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T json -V -Y \"tcp.port==80 or udp.port==80 or eapol\" 2> /dev/null`
+
+const gui = new Gui(format)
+
+// start capture
+const child = exec(cmd, {async: true, silent: true})
+
+child.stdout.pipe(JSONStream.parse('*._source.layers'))
+.on('data', processLine)
+
+if (process.platform === 'darwin') {
+  const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
+
+  const infoChild = exec(`${airportBin} -I`, {async: true, silent: true})
+  infoChild.stdout.on('data', line => {
+    if (line) {
+      line.split('\n').forEach(x => {
+        gui.infoLogAddRow(x)
+      })
+    }
+  })
+
+} else {
+  gui.infoLogAddRow('Could not show wifi info')
+}
 
 function processLine (layers) {
-  const get = getProp(layers)
-
-  const srcmac = get(['eth', 'eth.src', 'eth.addr'])
-  const srcmacResolved = get(['eth', 'eth.src', 'eth.addr_resolved'])
-  const dstmac = get(['eth', 'eth.dst', 'eth.addr'])
-  const distmacResolved = get(['eth', 'eth.dst', 'eth.addr_resolved'])
-
-  const port = get(['tcp', 'tcp.port'])
-  const srcport = get(['tcp', 'tcp.srcport'])
-  const dstport = get(['tcp', 'tcp.dstport'])
-
-  const srcip = get(['ip', 'ip.src'])
-  const dstip = get(['ip', 'ip.dst'])
-
-  const firstKey = Object.keys(get(['http'], {}))[0]
-
-  const method = get(['http', firstKey, 'http.request.method'])
-  const userAgent = get(['http', 'http.user_agent'])
-  const host = get(['http', 'http.host'])
-  const requestUri = get(['http', 'http.request.full_uri'])
-  const cookie = get(['http', 'http.cookie'])
-  const contentType = get(['http', 'http.content_type'])
-  const httpData = get(['http', 'http.file_data'])
-
-  if (!port) return false
+  const {
+    port,
+    method,
+    host,
+    dstip,
+    srcip,
+    srcmac,
+    httpData,
+    eapolDataLen,
+    wlanMac,
+    wlanMacResolved,
+    fullRequestUri
+  } = formatPacket(layers)
 
   /*
-  console.log(srcmac)
-  console.log(srcmacResolved)
-  console.log(dstmac)
-  console.log(distmacResolved)
+   * the fourth and final eapol packet finalizes the handshake
+   * between client and router so there is no data.
+   * EAPOL packets exchange PMK keys.
+   */
 
-  console.log(port)
-  console.log(srcport)
-  console.log(dstport)
-
-  console.log(srcip)
-  console.log(dstip)
-
-  console.log(method)
-  console.log(userAgent)
-  console.log(host)
-  console.log(requestUri)
-  console.log(cookie)
-  console.log(contentType)
-  */
+  if (eapolDataLen === '0') {
+    gui.connectionsLogAddRow(`${wlanMacResolved} ${wlanMac}`)
+  }
 
   let account = ''
   let password = ''
@@ -155,51 +119,38 @@ function processLine (layers) {
     var keys = Object.keys(obj)
     keys.forEach(key => {
       if (userFields.indexOf(key) > -1) {
-        account = query[key]
+        account = obj[key]
       } else if (passFields.indexOf(key) > -1) {
-        password = query[key]
+        password = obj[key]
       }
     })
 
     if (account || password || httpData) {
       const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
 
-      tableData.unshift(row)
+      gui.addRow(row)
 
-      table.setData({
-        headers: tableHeaders,
-        data: tableData
-      })
-
-      screen.render()
+      if (outfile) {
+        fs.appendFile(outfile, row.join('\t'), () => {})
+      }
     }
+  }
+
+  if (isImage(fullRequestUri)) {
+    gui.imageLogAddRow(fullRequestUri)
   }
 }
 
-/*
-          var firstLine = headerContent[0];
-          var uri = firstLine.split(" ")[1];
-          var urlParse = uri.split("?");
-          var path = urlParse[0];
-          content = urlParse[1];
+function isImage (uri) {
+  if (!uri) return false
 
-          var pattern = new RegExp("\.(jpg|png|gif|jpeg|bmp)$", "i");
+  const pattern = /\.(png|gif|jpe?g|bmp)$/i
 
-          if (pattern.test(path)) {
-              picture = "http://" + domain + uri;
-              request.head(picture, function (error, response) {
-                  var status = response.statusCode;
-                  if (!error && status === 200) {
-                      var picture = picture;
-                  }
-                  else {
-                      picture = null;
-                  }
-              })
-          }
-          */
-// quit with command c
-process.stdin.setRawMode(true);
+  return pattern.test(uri)
+}
+
+// quit with ctrl-c
+process.stdin.setRawMode(true)
 process.stdin.on('data', function(b) {
   if (b[0] === 3) {
     process.stdin.setRawMode(false)

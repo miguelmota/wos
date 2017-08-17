@@ -2,6 +2,8 @@
 
 > Monitor traffic for sheep and display a [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) dashboard.
 
+<img src="./screenshot.png" width="700" />
+
 # Install
 
 ```bash
@@ -18,6 +20,8 @@ $ wos --help
 | |/ |/ / ___ |/ /___/ /___   / /_/ / __/     ___/ / __  / /___/ /___/ ____/
 |__/|__/_/  |_/_____/_____/   \____/_/       /____/_/ /_/_____/_____/_/
 
+  Monitor traffic for sheep and display a Wall of Sheep dashboard.
+
   Usage
     $ wos <options>
 
@@ -28,10 +32,12 @@ $ wos --help
     -i, --interface Capture interface
     -s, --ssid Wifi SSID
     -p, --pass Wifi password
-    --no-monitor Disable monitor mode
+    -n, --no-monitor Disable monitor mode
+    -f, --format Format: dash (default), text
+    -o, --outfile Output file
 
   Examples
-    $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
+    $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o sheep.txt
 ```
 
 # Requirements
