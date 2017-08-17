@@ -1,6 +1,6 @@
 {
   "name": "wos",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Monitor traffic for sheep and display a Wall of Sheep dashboard. ",
   "main": "index.js",
   "bin": {

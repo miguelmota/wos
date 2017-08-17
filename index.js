@@ -123,9 +123,10 @@ function processLine (layers) {
   const isPOP = (port == 110)
   const isIMAP = (port == 143)
   const isSMTP = (port == 25)
+  const isHTTPPost = (method === 'POST')
 
   if (isHTTP) {
-    if (method === 'POST') {
+    if (isPost) {
       let obj = null
 
       try {
@@ -211,7 +212,6 @@ function processLine (layers) {
       if (passRegex.test(str)) {
         const match = str.match(passRegex)
         if (match && match.length > 1) {
-          console.log(password)
           password =  match[1].trim().replace(/\\$/, '')
         }
       }
@@ -219,7 +219,7 @@ function processLine (layers) {
   }
 
   if (
-    (isHTTP || isFTP || isPOP  || isIMAP || isSMTP) &&
+    (isHTTPPost || isFTP || isPOP  || isIMAP || isSMTP) &&
     (account || password || httpData)) {
     const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
 
