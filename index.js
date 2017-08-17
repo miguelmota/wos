@@ -126,7 +126,7 @@ function processLine (layers) {
   const isHTTPPost = (method === 'POST')
 
   if (isHTTP) {
-    if (isPost) {
+    if (isHTTPPost) {
       let obj = null
 
       try {
