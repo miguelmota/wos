@@ -55,19 +55,19 @@ WOS supports:
 
 # FAQ
 
-Q. My wireless card is stuck in monitor mode!
+- Q. My wireless card is stuck in monitor mode!
 
-A. Kill `tshark` processes and toggle off and on the wireless card.
+  - A. Kill `tshark` processes and toggle off and on the wireless card.
 
-Q. What does WOS mean?
+    ```bash
+    pkill tshark
+    ```
 
-It means [W̶a̶l̶l̶ ̶o̶f̶ ̶S̶h̶e̶e̶p̶](https://www.wallofsheep.com/pages/wall-of-sheep) Wall of [Shetland](https://en.wikipedia.org/wiki/Shetland_sheep)
+- Q. What does WOS mean?
 
-<small>Wall of Sheep</small> is a [trademark](http://tmsearch.uspto.gov/bin/showfield?f=doc&state=4810:8qpp6l.2.2)
+  - A. It means "Wall of [Shetland](https://en.wikipedia.org/wiki/Shetland_sheep)"
 
-```bash
-pkill tshark
-```
+    <small>Note: [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) is a [trademark](http://tmsearch.uspto.gov/bin/showfield?f=doc&state=4810:8qpp6l.2.2)</small>
 
 # License
 
