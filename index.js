@@ -31,7 +31,7 @@ const cli = meow(`
       -o, --outfile Output file
 
     Examples
-      $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o sheep.txt
+      $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
 `)
 
 const {flags} = cli
