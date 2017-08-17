@@ -152,7 +152,7 @@ class Gui {
       this.gui = new DashGui()
 
       this.gui.renderTable({
-        title: 'Wall of Sheep',
+        title: 'Logins',
         tableHeaders,
         tableData,
         columnWidth: [20, 20, 5, 25, 13, 13, 17, 65]

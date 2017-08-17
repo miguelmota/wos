@@ -1,6 +1,6 @@
-# Wall of Sheep
+# wos
 
-> Monitor traffic for sheep and display a [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) dashboard.
+> Monitor traffic for unencrypted data (using [tshark](https://www.wireshark.org/docs/man-pages/tshark.html)) and display a dashboard in terminal.
 
 <img src="./screenshot.png" width="700" />
 
@@ -14,13 +14,8 @@ npm install -g wos
 
 ```bash
 $ wos --help
- _       _____    __    __       ____  ______   _____ __  __________________
-| |     / /   |  / /   / /      / __ \/ ____/  / ___// / / / ____/ ____/ __ \
-| | /| / / /| | / /   / /      / / / / /_      \__ \/ /_/ / __/ / __/ / /_/ /
-| |/ |/ / ___ |/ /___/ /___   / /_/ / __/     ___/ / __  / /___/ /___/ ____/
-|__/|__/_/  |_/_____/_____/   \____/_/       /____/_/ /_/_____/_____/_/
 
-  Monitor traffic for sheep and display a Wall of Sheep dashboard.
+  Monitor traffic for unencrypted data and display a dashboard.
 
   Usage
     $ wos <options>
@@ -37,10 +32,10 @@ $ wos --help
     -o, --outfile Output file
 
   Examples
-    $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o sheep.txt
+    $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
 ```
 
-Currently, this Wall of Sheep only supports:
+WOS supports:
 
 - Retrieving logins from unencrypted HTTP pages
 
@@ -63,6 +58,12 @@ Currently, this Wall of Sheep only supports:
 Q. My wireless card is stuck in monitor mode!
 
 A. Kill `tshark` processes and toggle off and on the wireless card.
+
+Q. What does WOS mean?
+
+It means [W̶a̶l̶l̶ ̶o̶f̶ ̶S̶h̶e̶e̶p̶](https://www.wallofsheep.com/pages/wall-of-sheep) Wall of [Shetland](https://en.wikipedia.org/wiki/Shetland_sheep)
+
+<small>Wall of Sheep</small> is a [trademark](http://tmsearch.uspto.gov/bin/showfield?f=doc&state=4810:8qpp6l.2.2)
 
 ```bash
 pkill tshark
