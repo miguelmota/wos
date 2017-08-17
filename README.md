@@ -67,7 +67,7 @@ WOS supports:
 
   - A. It means "Wall of [Shetland](https://en.wikipedia.org/wiki/Shetland_sheep)"
 
-    <small>Note: [Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) is a [trademark](http://tmsearch.uspto.gov/bin/showfield?f=doc&state=4810:8qpp6l.2.2)</small>
+    <sub><sup>[Wall of Sheep](https://www.wallofsheep.com/pages/wall-of-sheep) is a [trademark](http://tmsearch.uspto.gov/bin/showfield?f=doc&state=4810:8qpp6l.2.2) and couldn't use it.</sup></sub>
 
 # License
 
