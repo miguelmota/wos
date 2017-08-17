@@ -11,10 +11,16 @@ const {userFields, passFields} = require(`./src/fields`)
 
 const cli = meow(`
     Usage
-      $ wos <options>
+  $ wos -i <interface> [options]
 
-    Important
-      Use single quotes in order to escape special characters.
+    Info
+      Capture interface is required. Use ifconfig command to find interfaces.
+
+      SSID and password are required if using secured wifi such as WPA or WEP in order to decrypt packets.
+
+      Wrap SSID and password in single quotes in order to escape special characters.
+
+      After running wos, devices must send perform the EAPOL handshake in order for wos to decrypt their traffic. The handshake is initiated when the device connects or reconnects to the network.
 
     Options
       -i, --interface Capture interface
