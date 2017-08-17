@@ -40,6 +40,12 @@ $ wos --help
     $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o sheep.txt
 ```
 
+Currently, this Wall of Sheep only supports:
+
+- Retrieving logins from unencrypted HTTP pages
+
+- Retrieving logins from unencrypted FTP sessions
+
 # Requirements
 
 - [tshark - Dump and analyze network traffic](https://www.wireshark.org/docs/man-pages/tshark.html)

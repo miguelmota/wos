@@ -33,6 +33,8 @@ function formatPacket(layers) {
     eapolDataLen: eapol(['wlan_rsna_eapol.keydes.data_len']),
     wlanMac: wlan(['wlan.staa']),
     wlanMacResolved: wlan(['wlan.staa_resolved']),
+
+    ftp: get(['ftp'])
   }
 }
 

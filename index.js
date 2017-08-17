@@ -53,7 +53,7 @@ if (pass) {
   decKeys = `-o \"uat:80211_keys:\\\"wpa-pwd\\\",\\\"${pass}:${ssid}\\\"\"`
 }
 
-const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T json -V -Y \"tcp.port==80 or udp.port==80 or eapol\" 2> /dev/null`
+const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T json -V -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or eapol\" 2> /dev/null`
 
 const gui = new Gui(format)
 
@@ -84,6 +84,7 @@ function processLine (layers) {
     port,
     method,
     host,
+    dstport,
     dstip,
     srcip,
     srcmac,
@@ -91,7 +92,8 @@ function processLine (layers) {
     eapolDataLen,
     wlanMac,
     wlanMacResolved,
-    fullRequestUri
+    fullRequestUri,
+    ftp
   } = formatPacket(layers)
 
   /*
@@ -107,37 +109,63 @@ function processLine (layers) {
   let account = ''
   let password = ''
 
-  if (method === 'POST') {
-    let obj = null
+  const isHTTP = (port == 80)
+  const isFTP = (port == 21)
+  const isPOP3 = (port == 110)
+  const isIMAP = (port == 143)
 
-    try {
-      obj = JSON.parse(httpData)
-    } catch(error) {
-      obj = qs.parse(httpData)
+  if (isHTTP) {
+    if (method === 'POST') {
+      let obj = null
+
+      try {
+        obj = JSON.parse(httpData)
+      } catch(error) {
+        obj = qs.parse(httpData)
+      }
+
+      var keys = Object.keys(obj)
+      keys.forEach(key => {
+        if (userFields.indexOf(key) > -1) {
+          account = obj[key]
+        } else if (passFields.indexOf(key) > -1) {
+          password = obj[key]
+        }
+      })
     }
 
-    var keys = Object.keys(obj)
-    keys.forEach(key => {
-      if (userFields.indexOf(key) > -1) {
-        account = obj[key]
-      } else if (passFields.indexOf(key) > -1) {
-        password = obj[key]
-      }
-    })
+    if (isImage(fullRequestUri)) {
+      gui.imageLogAddRow(fullRequestUri)
+    }
+  } else if (isFTP) {
+    if (ftp) {
+      const str = JSON.stringify(ftp)
+      const userRegex = /USER (.*)\\r/i;
+      const passRegex = /PASS (.*)\\r/i;
 
-    if (account || password || httpData) {
-      const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
+      if (userRegex.test(str)) {
+        const match = str.match(userRegex)
 
-      gui.addRow(row)
-
-      if (outfile) {
-        fs.appendFile(outfile, row.join('\t'), () => {})
+        if (match && match.length > 1) {
+          account =  match[1].trim().replace(/\\$/, '')
+        }
+      } else if (passRegex.test(str)) {
+        const match = str.match(passRegex)
+        if (match && match.length > 1) {
+          password =  match[1].trim().replace(/\\$/, '')
+        }
       }
     }
   }
 
-  if (isImage(fullRequestUri)) {
-    gui.imageLogAddRow(fullRequestUri)
+  if (account || password || httpData) {
+    const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
+
+    gui.addRow(row)
+
+    if (outfile) {
+      fs.appendFile(outfile, row.join('\t'), () => {})
+    }
   }
 }
 
