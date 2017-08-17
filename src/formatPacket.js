@@ -34,7 +34,10 @@ function formatPacket(layers) {
     wlanMac: wlan(['wlan.staa']),
     wlanMacResolved: wlan(['wlan.staa_resolved']),
 
-    ftp: get(['ftp'])
+    ftp: get(['ftp']),
+    imap: get(['imap']),
+    pop: get(['pop']),
+    smtp: get(['smtp'])
   }
 }
 

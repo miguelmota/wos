@@ -44,7 +44,13 @@ Currently, this Wall of Sheep only supports:
 
 - Retrieving logins from unencrypted HTTP pages
 
-- Retrieving logins from unencrypted FTP sessions
+- Retrieving credentials from unencrypted FTP logins
+
+- Retrieving credentials from unencrypted SMTP logins
+
+- Retrieving credentials from unencrypted POP logins
+
+- Retrieving credentials from unencrypted IMAP logins
 
 # Requirements
 
