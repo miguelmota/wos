@@ -47,7 +47,7 @@ You can simply just run `wos` command and it'll set up the options based on your
 $ wos
 ```
 
-You can manually set network capture interface card, as well as the SSID and password of the network. Those are required in order to decrypt packets on a secured network such as WPA.
+You can manually set network capture interface card, as well as the SSID and password of the network. Those are required in order to decrypt packets on a secured network such as WPA. Remember, *you can only capture on the same network you are connected to!*.
 
 ```bash
 $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
