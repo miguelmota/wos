@@ -104,7 +104,6 @@ if (process.platform === 'darwin') {
 } else {
   gui.infoLogAddRow('Could not show wifi info')
 }
-})()
 
 function processLine (layers) {
   const {
@@ -259,6 +258,7 @@ function isImage (uri) {
 
   return pattern.test(uri)
 }
+})()
 
 // quit with ctrl-c
 process.stdin.setRawMode(true)
