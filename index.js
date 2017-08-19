@@ -4,6 +4,11 @@ const path = require('path');
 const JSONStream = require('JSONStream')
 const {exec}= require('shelljs')
 const meow = require('meow')
+const {sync:commandExists} = require('command-exists')
+const wifiInterface = require('wifi-interface')
+const wifiSecurity = require('wifi-security')
+const wifiName = require('wifi-name')
+const wifiPassword = require('wifi-password')
 
 const formatPacket = require(`./src/formatPacket`)
 const Gui = require(`./src/Gui`)
@@ -11,7 +16,7 @@ const {userFields, passFields} = require(`./src/fields`)
 
 const cli = meow(`
     Usage
-  $ wos -i <interface> [options]
+  $ wos [options]
 
     Info
       Capture interface is required. Use ifconfig command to find interfaces.
@@ -34,14 +39,24 @@ const cli = meow(`
       $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
 `)
 
+;(async () => {
 const {flags} = cli
-
-const ssid = process.env.WOS_SSID || flags.ssid || flags.s
-const pass = process.env.WOS_PASS || flags.pass || flags.p
-const interface = process.env.WOS_INTERFACE || flags.interface || flags.i
+const ssid = process.env.WOS_SSID || flags.ssid || flags.s || await wifiName()
+let pass = process.env.WOS_PASS || flags.pass || flags.p
+const interface = process.env.WOS_INTERFACE || flags.interface || flags.i || wifiInterface()
 const disableMonitor = process.env.WOS_NO_MONITOR || flags.n || flags.noMonitor || (flags.monitor != null ? true : false)
 const outfile = process.env.WOS_OUTPUT || flags.o || flags.outfile
 let format = process.env.WOS_FORMAT || flags.f || flags.format
+
+let isOpen = (wifiSecurity() === 'none')
+
+if (!pass && !isOpen) {
+  try {
+    pass = await wifiPassword()
+  } catch (error) {
+
+  }
+}
 
 if (!(format === 'dash' || format === 'text')) {
   format = 'dash'
@@ -49,7 +64,12 @@ if (!(format === 'dash' || format === 'text')) {
 
 if (!interface) {
   cli.showHelp()
-  return false
+  process.exit(0)
+}
+
+if (!commandExists('tshark')) {
+  console.error('tshark command was not found. Please install wireshark https://www.wireshark.org/download.html')
+  process.exit(0)
 }
 
 const monitor = disableMonitor ? '' : '-I'
@@ -84,6 +104,7 @@ if (process.platform === 'darwin') {
 } else {
   gui.infoLogAddRow('Could not show wifi info')
 }
+})()
 
 function processLine (layers) {
   const {

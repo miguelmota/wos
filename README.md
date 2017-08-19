@@ -41,6 +41,18 @@ $ wos --help
       $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
 ```
 
+You can simply just run `wos` command and it'll set up the options based on your current wifi connection.
+
+```bash
+$ wos
+```
+
+You can manually set network capture interface card, as well as the SSID and password of the network. Those are required in order to decrypt packets on a secured network such as WPA.
+
+```bash
+$ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
+```
+
 WOS supports:
 
 - Retrieving logins from unencrypted HTTP pages
@@ -55,7 +67,9 @@ WOS supports:
 
 # Requirements
 
-- [tshark - Dump and analyze network traffic](https://www.wireshark.org/docs/man-pages/tshark.html)
+- [Wireshark](https://www.wireshark.org/download.html)
+
+- [tshark](https://www.wireshark.org/docs/man-pages/tshark.html) (comes with Wireshark)
 
 - Wireless interface card that supports monitor mode
 
