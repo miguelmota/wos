@@ -2,6 +2,8 @@ const fs = require('fs')
 const qs = require('qs')
 const path = require('path');
 const {exec}= require('shelljs')
+const JSONStream = require('JSONStream')
+const through = require('through')
 const meow = require('meow')
 const {sync:commandExists} = require('command-exists')
 const wifiInterface = require('wifi-interface')
@@ -78,39 +80,13 @@ if (pass) {
   decKeys = `-o \"uat:80211_keys:\\\"wpa-pwd\\\",\\\"${pass}:${ssid}\\\"\"`
 }
 
-const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T ek -V -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or eapol\" 2> /dev/null`
+const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T ek -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or eapol\" 2> /dev/null`
 
 const gui = new Gui(format)
 
-// start capture
-const child = exec(cmd, {async: true, silent: true})
+capture()
 
-function repairJsonString(data) {
-  return data.replace(/Form item: "(.*)" = "(.*)""/, function(match, p1, p2, offset, string) {
-    return `Form item: \\"${p1}\" = \\"${p2}\\""`
-  })
-  .replace(/"tcp_flags_tcp_flags_str": ".*?",/, '')
-}
-
-child.stdout
-.on('data', (data) => {
-  const lines = data.split(/\}\n/).map(x => `${x}}`)
-
-  lines.forEach(line => {
-    line = line.replace(/[\n\r]/gi, '')
-
-    try {
-      const json = JSON.parse(repairJsonString(line))
-
-      if (json.layers) {
-        processLayers(json.layers)
-      }
-    } catch(error) {
-
-    }
-  })
-})
-
+// show info panel
 if (process.platform === 'darwin') {
   const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
 
@@ -125,6 +101,41 @@ if (process.platform === 'darwin') {
 
 } else {
   gui.infoLogAddRow('Could not show wifi info')
+}
+
+function capture() {
+  const child = exec(cmd, {async: true, silent: true})
+
+  child.stdout
+  .pipe(through(function write(data) {
+    data = repairJsonString(data)
+    this.queue(data)
+  }))
+  .pipe(JSONStream.parse('*').on('error', () => {
+    // retry
+    capture()
+  }))
+  .on('error', () => {})
+  .on('data', processChunk)
+}
+
+function processChunk(json) {
+  try {
+    if (json.tcp) {
+      processLayers(json)
+    } else if (json.layers) {
+      processLayers(json.layers)
+    }
+  } catch(error) {
+
+  }
+}
+
+function repairJsonString(data) {
+  return data.replace(/Form item: "(.*)" = "(.*)""/, function(match, p1, p2, offset, string) {
+    return `Form item: \\"${p1}\" = \\"${p2}\\""`
+  })
+  .replace(/"tcp_flags_tcp_flags_str": ".*?",/, '')
 }
 
 function processLayers (layers) {
@@ -288,9 +299,15 @@ function isImage (uri) {
 
 // quit with ctrl-c
 process.stdin.setRawMode(true)
-process.stdin.on('data', function(b) {
+process.stdin.on('data', (b) => {
   if (b[0] === 3) {
     process.stdin.setRawMode(false)
     process.exit()
   }
 })
+
+process.on('uncaughtException', (err) => {
+  console.error('uncaughtException: ' + err.message)
+  console.error(err.stack)
+  process.exit(1)
+});
