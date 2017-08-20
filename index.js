@@ -1,13 +1,12 @@
 const fs = require('fs')
 const qs = require('qs')
 const path = require('path');
-const JSONStream = require('JSONStream')
 const {exec}= require('shelljs')
 const meow = require('meow')
 const {sync:commandExists} = require('command-exists')
 const wifiInterface = require('wifi-interface')
 const wifiSecurity = require('wifi-security')
-const wifiName = require('wifi-name')
+const {sync:wifiName} = require('wifi-name')
 const wifiPassword = require('wifi-password')
 
 const formatPacket = require(`./src/formatPacket`)
@@ -41,7 +40,7 @@ const cli = meow(`
 
 ;(async () => {
 const {flags} = cli
-const ssid = process.env.WOS_SSID || flags.ssid || flags.s || await wifiName()
+const ssid = process.env.WOS_SSID || flags.ssid || flags.s || wifiName()
 let pass = process.env.WOS_PASS || flags.pass || flags.p
 const interface = process.env.WOS_INTERFACE || flags.interface || flags.i || wifiInterface()
 const disableMonitor = process.env.WOS_NO_MONITOR || flags.n || flags.noMonitor || (flags.monitor != null ? true : false)
@@ -79,15 +78,38 @@ if (pass) {
   decKeys = `-o \"uat:80211_keys:\\\"wpa-pwd\\\",\\\"${pass}:${ssid}\\\"\"`
 }
 
-const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T json -V -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or eapol\" 2> /dev/null`
+const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T ek -V -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or eapol\" 2> /dev/null`
 
 const gui = new Gui(format)
 
 // start capture
 const child = exec(cmd, {async: true, silent: true})
 
-child.stdout.pipe(JSONStream.parse('*._source.layers'))
-.on('data', processLine)
+function repairJsonString(data) {
+  return data.replace(/Form item: "(.*)" = "(.*)""/, function(match, p1, p2, offset, string) {
+    return `Form item: \\"${p1}\" = \\"${p2}\\""`
+  })
+  .replace(/"tcp_flags_tcp_flags_str": ".*?",/, '')
+}
+
+child.stdout
+.on('data', (data) => {
+  const lines = data.split(/\}\n/).map(x => `${x}}`)
+
+  lines.forEach(line => {
+    line = line.replace(/[\n\r]/gi, '')
+
+    try {
+      const json = JSON.parse(repairJsonString(line))
+
+      if (json.layers) {
+        processLayers(json.layers)
+      }
+    } catch(error) {
+
+    }
+  })
+})
 
 if (process.platform === 'darwin') {
   const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
@@ -105,7 +127,11 @@ if (process.platform === 'darwin') {
   gui.infoLogAddRow('Could not show wifi info')
 }
 
-function processLine (layers) {
+function processLayers (layers) {
+  if (typeof layers !== 'object') {
+    return false
+  }
+
   const {
     port,
     method,
