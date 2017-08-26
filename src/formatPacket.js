@@ -10,10 +10,10 @@ function formatPacket(layers) {
   const eapol = getProp(layers.eapol || {})
 
   return {
-    srcmac: eth(['eth_eth_src_eth_addr']),
-    srcmacResolved: get(['eth_eth_src_eth_addr_resolved']),
-    dstmac: eth(['eth_eth_dst_eth_addr']),
-    distmacResolved: eth(['eth_eth_dst_eth_addr_resolved']),
+    srcmac: eth(['eth_src_eth_addr']),
+    srcmacResolved: get(['eth_src_eth_addr_resolved']),
+    dstmac: eth(['eth_dst_eth_addr']),
+    distmacResolved: eth(['eth_dst_eth_addr_resolved']),
 
     port: tcp(['tcp_tcp_port']),
     srcport: tcp(['tcp_tcp_srcport']),

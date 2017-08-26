@@ -168,10 +168,10 @@ function capture() {
 
 function processChunk(json) {
   try {
-    if (json.tcp) {
-      processLayers(json)
-    } else if (json.layers) {
+    if (json.layers) {
       processLayers(json.layers)
+    } else {
+      processLayers(json)
     }
   } catch(error) {
 
@@ -216,7 +216,6 @@ function processLayers (layers) {
    * between client and router so there is no data.
    * EAPOL packets exchange PMK keys.
    */
-
   if (eapolDataLen === '0') {
     gui.connectionsLogAddRow(`${wlanMacResolved} ${wlanMac}`)
   }

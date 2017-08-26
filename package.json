@@ -1,6 +1,6 @@
 {
   "name": "wos",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Monitor traffic for unencrypted data and display a dashboard.",
   "main": "index.js",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "merge": "mergecap -w merged.pcap samples/*"
   },
   "repository": {
     "type": "git",
