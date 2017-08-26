@@ -141,7 +141,7 @@ class Gui {
   constructor(type) {
     this.type = type
 
-    const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'mac', 'data']
+    const tableHeaders = ['login', 'pass', 'port', 'host', 'dst_ip', 'src_ip', 'src_mac', 'data']
     const tableData = []
 
     if (type === 'text') {

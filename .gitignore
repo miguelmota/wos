@@ -105,3 +105,4 @@ tmp
 # Files to ignore #
 ###################
 merged.pcap
+wos.sh

@@ -2,7 +2,7 @@
 
 > Monitor traffic for unencrypted data (using [tshark](https://www.wireshark.org/docs/man-pages/tshark.html)) and display a dashboard in terminal.
 
-<img src="./screenshot.gif" width="700" />
+<img src="./screenshot.gif" width="750" />
 
 # Install
 
