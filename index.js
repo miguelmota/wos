@@ -32,26 +32,56 @@ const cli = meow(`
       -i, --interface Capture interface
       -s, --ssid Wifi SSID
       -p, --pass Wifi password
-      -n, --no-monitor Disable monitor mode
+      -c, --channel Wifi channel
+      -n, --nomonitor Disable monitor mode
       -f, --format Format: dash (default), text
       -o, --outfile Output file
+      -r, --readfile Read pcap file instead of monitoring
 
     Examples
       $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
-`)
+  `, {
+    boolean: [
+      'nomonitor'
+    ],
+    string: [
+      'interface',
+      'ssid',
+      'pass',
+      'format',
+      'outfile',
+      'readfile'
+    ],
+    number: [
+      'channel'
+    ],
+    alias: {
+      i: 'interface',
+      s: 'ssid',
+      p: 'pass',
+      c: 'channel',
+      n: 'nomonitor',
+      f: 'format',
+      o: 'outfile',
+      r: 'readfile'
+    }
+  }
+)
 
 ;(async () => {
 const {flags} = cli
-const ssid = process.env.WOS_SSID || flags.ssid || flags.s || wifiName()
-let pass = process.env.WOS_PASS || flags.pass || flags.p
-const interface = process.env.WOS_INTERFACE || flags.interface || flags.i || wifiInterface()
-const disableMonitor = process.env.WOS_NO_MONITOR || flags.n || flags.noMonitor || (flags.monitor != null ? true : false)
-const outfile = process.env.WOS_OUTPUT || flags.o || flags.outfile
-let format = process.env.WOS_FORMAT || flags.f || flags.format
+const ssid = process.env.WOS_SSID || flags.ssid || wifiName()
+let pass = process.env.WOS_PASS || flags.pass
+const channel = process.env.WOS_CHANNEL || flags.channel
+const interface = process.env.WOS_INTERFACE || flags.interface || wifiInterface()
+const disableMonitor = process.env.WOS_NOMONITOR || flags.nomonitor
+const outfile = process.env.WOS_OUTPUT || flags.outfile
+let format = process.env.WOS_FORMAT || flags.format
+let readfile = process.env.WOS_READ || flags.readfile
 
 let isOpen = (wifiSecurity() === 'none')
 
-if (!pass && !isOpen) {
+if (!readfile && !pass && !isOpen) {
   try {
     pass = await wifiPassword()
   } catch (error) {
@@ -80,14 +110,31 @@ if (pass) {
   decKeys = `-o \"uat:80211_keys:\\\"wpa-pwd\\\",\\\"${pass}:${ssid}\\\"\"`
 }
 
-const cmd = `tshark ${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys} -T ek -Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or eapol\" 2> /dev/null`
+let captureOptions = `${monitor} -i ${interface} -o wlan.enable_decryption:TRUE ${decKeys}`
+
+if (readfile) {
+  captureOptions = `-r ${readfile}`
+}
+
+const displayFilters = `-Y \"tcp.port==80 or udp.port==80 or tcp.port==21 or tcp.port==110 or tcp.port==143 or tcp.port==25 or tcp.port==23 or eapol\"`
+
+const outputFormat = '-T ek'
+
+const noStderr = `2> /dev/null`
+
+const cmd = `tshark ${captureOptions} ${outputFormat} ${displayFilters} ${noStderr}`
 
 const gui = new Gui(format)
 
 capture()
 
-// show info panel
 if (process.platform === 'darwin') {
+  // set channel
+  if (channel) {
+    exec(`${airportBin} -c ${channel}`, {async: true, silent: true})
+  }
+
+  // show info panel
   const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
 
   const infoChild = exec(`${airportBin} -I`, {async: true, silent: true})
@@ -159,7 +206,9 @@ function processLayers (layers) {
     ftp,
     smtp,
     pop,
-    imap
+    imap,
+    telnet,
+    telnetData
   } = formatPacket(layers)
 
   /*
@@ -174,15 +223,21 @@ function processLayers (layers) {
 
   let account = ''
   let password = ''
+  let data = ''
 
   const isHTTP = (port == 80)
+  const isHTTPPost = (method === 'POST')
   const isFTP = (port == 21)
   const isPOP = (port == 110)
   const isIMAP = (port == 143)
   const isSMTP = (port == 25)
-  const isHTTPPost = (method === 'POST')
+  const isTELNET = (port == 23)
 
   if (isHTTP) {
+    if (httpData) {
+      data = httpData
+    }
+
     if (isHTTPPost) {
       let obj = null
 
@@ -273,12 +328,16 @@ function processLayers (layers) {
         }
       }
     }
+  } else if (isTELNET) {
+    if (telnetData) {
+      data = telnetData
+    }
   }
 
   if (
-    (isHTTPPost || isFTP || isPOP  || isIMAP || isSMTP) &&
-    (account || password || httpData)) {
-    const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', httpData||'']
+    (isHTTPPost || isFTP || isPOP  || isIMAP || isSMTP || isTELNET) &&
+    (account || password || data)) {
+    const row = [account||'', password||'', port||'', host||'', dstip||'', srcip||'', srcmac||'', data||'']
 
     gui.addRow(row)
 

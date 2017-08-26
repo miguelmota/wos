@@ -1,6 +1,6 @@
 {
   "name": "wos",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Monitor traffic for unencrypted data and display a dashboard.",
   "main": "index.js",
   "bin": {

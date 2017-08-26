@@ -33,9 +33,11 @@ $ wos --help
       -i, --interface Capture interface
       -s, --ssid Wifi SSID
       -p, --pass Wifi password
-      -n, --no-monitor Disable monitor mode
+      -c, --channel Wifi channel
+      -n, --nomonitor Disable monitor mode
       -f, --format Format: dash (default), text
       -o, --outfile Output file
+      -r, --readfile Read pcap file instead of monitoring
 
     Examples
       $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD' -o data.txt
@@ -55,7 +57,7 @@ $ wos -i en0 --ssid='HomeWifi' --pass='d4Pazsw0rD'
 
 WOS supports:
 
-- Retrieving logins from unencrypted HTTP pages
+- Retrieving credentials from unencrypted HTTP pages
 
 - Retrieving credentials from unencrypted FTP logins
 
@@ -65,13 +67,15 @@ WOS supports:
 
 - Retrieving credentials from unencrypted IMAP logins
 
+- Retrieving data from unencrypted TELNET sessions
+
 # Requirements
 
 - [Wireshark](https://www.wireshark.org/download.html)
 
 - [tshark](https://www.wireshark.org/docs/man-pages/tshark.html) (comes with Wireshark)
 
-- Wireless interface card that supports monitor mode
+- Wireless interface card that supports [monitor mode](https://en.wikipedia.org/wiki/Monitor_mode). Here's a [list](https://www.2600index.info/Links/26/3/www.aircrack-ng.org/doku.php%3Fid=compatibility_drivers.html).
 
 # FAQ
 

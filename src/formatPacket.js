@@ -37,7 +37,9 @@ function formatPacket(layers) {
     ftp: get(['ftp']),
     imap: get(['imap']),
     pop: get(['pop']),
-    smtp: get(['smtp'])
+    smtp: get(['smtp']),
+    telnet: get(['telnet']),
+    telnetData: get(['telnet', 'telnet_telnet_data'])
   }
 }
 
