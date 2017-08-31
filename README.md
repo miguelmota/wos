@@ -84,8 +84,15 @@ WOS supports:
   - A. Kill `tshark` processes and toggle off and on the wireless card.
 
     ```bash
-    pkill tshark
+    $ pkill tshark
     ```
+- Q. I'm monitoring and can see EAPOL handshakes but I'm not capturing data.
+
+  - A. Make sure to set the correct wifi channel when running wos, especially if you're on dual-band wifi. You can only monitor on one channel.
+
+      ```
+      $ wos -c 36
+      ```
 
 - Q. What does WOS mean?
 

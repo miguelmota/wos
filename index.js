@@ -129,13 +129,13 @@ const gui = new Gui(format)
 capture()
 
 if (process.platform === 'darwin') {
+  // show info panel
+  const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
+
   // set channel
   if (channel) {
     exec(`${airportBin} -c ${channel}`, {async: true, silent: true})
   }
-
-  // show info panel
-  const airportBin = '/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport';
 
   const infoChild = exec(`${airportBin} -I`, {async: true, silent: true})
   infoChild.stdout.on('data', line => {
